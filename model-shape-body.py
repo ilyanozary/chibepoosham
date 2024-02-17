@@ -71,3 +71,7 @@ model.fit(
     validation_data=train_generator  # The validation data generator
 )
 
+#saved_model
+
+model.save("model.keras")
+
