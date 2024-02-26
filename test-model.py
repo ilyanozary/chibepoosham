@@ -1,56 +1,36 @@
-
 import cv2
 import numpy as np
-import tensorflow as tf
+from tensorflow.keras.models import load_model
 
-# Load the model from the saved file
-model = tf.keras.models.load_model("my_model.h5")
+# Load the trained model
+model = load_model(
+    'body_shape_detection_model2.h5')
 
-# Define the image size and the class labels
-IMG_SIZE = 50 # You can change this according to your model input size
-CLASS_LABELS = ["aeroplane", "bicycle", "bird", "boat", "bottle", "bus", "car", "cat", "chair", "cow", "diningtable", "dog", "horse", "motorbike", "person", "pottedplant", "sheep", "sofa", "train", "tvmonitor"] # You can change this according to your model output classes
+# Define class labels based on your dataset
+class_labels = ['0', '1', '2', '3', '4', '5', '11', '21', '31', '41', '51']  # class labels
 
-# Define a function to test the model using webcam
-def test_model_webcam(model, webcam):
-# Loop until the user presses q key
-while True:
-# Read the webcam frame
-ret, frame = webcam.read()
-# If the frame is not read correctly, break the loop
-if not ret:
-break
-# Convert the frame to RGB color space
-frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-# Resize the frame to the model input size
-frame = cv2.resize(frame, (IMG_SIZE, IMG_SIZE))
-# Convert the frame to a numpy array and normalize it
-frame = np.array(frame) / 255.0
-# Reshape the frame to match the model input shape
-frame = frame.reshape(-1, IMG_SIZE, IMG_SIZE, 3)
-# Predict the class label using the model
-prediction = model.predict(frame)
-# Get the index of the highest probability
-prediction = np.argmax(prediction)
-# Get the corresponding class label
-prediction = CLASS_LABELS[prediction]
-# Display the prediction on the frame
-cv2.putText(frame, prediction, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-# Convert the frame back to BGR color space
-frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
-# Show the frame
-cv2.imshow("Webcam Test", frame)
-# Wait for 1 millisecond
-key = cv2.waitKey(1)
-# If the user presses q key, break the loop
-if key == ord("q"):
-    break
-# Release the webcam and close the window
-webcam.release()
-cv2.destroyAllWindows()
 
-# Load the webcam handler
-webcam = cv2.VideoCapture(0)
+# Function to preprocess image
+def preprocess_image(image_path):
+    image = cv2.imread(image_path)
+    image = cv2.resize(image, (150, 150))  # Resize image to match model's input size
+    image = image / 255.0  # Normalize pixel values to [0, 1]
+    return image
 
-# Test the model using the webcam
-test_model_webcam(model, webcam)
 
+# Function to predict class of an image
+def predict_image_class(image_path):
+    preprocessed_image = preprocess_image(image_path)
+    preprocessed_image = np.expand_dims(preprocessed_image, axis=0)  # Add batch dimension
+    predictions = model.predict(preprocessed_image)
+    predicted_class_index = np.argmax(predictions)
+    predicted_class_label = class_labels[predicted_class_index]
+    return predicted_class_label
+
+
+# Path to the image you want to predict
+image_path = 'imgpsh_fullsize_anim.jpeg'
+
+# Predict the class of the image
+predicted_class = predict_image_class(image_path)
+print('Predicted class:', predicted_class)
